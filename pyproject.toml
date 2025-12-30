@@ -1,0 +1,21 @@
+[project]
+name = "note-taker-mcp"
+version = "0.1.0"
+description = "Stdio MCP server for lightweight note storage with local Chroma retrieval."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "chriskyle" }, { name = "codex" }]
+dependencies = [
+    "fastmcp",
+    "chromadb",
+    "sentence-transformers",
+]
+
+[project.scripts]
+notes-mcp = "note_taker_mcp.server:main"
+
+[tool.uv]
+package = true
+dev-dependencies = [
+    "pytest",
+]

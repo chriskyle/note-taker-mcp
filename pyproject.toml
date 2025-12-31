@@ -1,6 +1,6 @@
 [project]
 name = "note-taker-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP allowing short text notes to be persisted and retrieved locally for aiding in long context reasoning tasks"
 readme = "README.md"
 requires-python = ">=3.10"

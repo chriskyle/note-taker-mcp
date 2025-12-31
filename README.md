@@ -51,6 +51,8 @@ Args:
 
 # Running the server
 
+> TODO: Add `uvx note-taker-mcp` support.
+
 Requirements: Python 3.10+, [`uv`](https://github.com/astral-sh/uv), and the `fastmcp`/`chromadb` dependencies installed via `uv sync`.
 
 Quick start:
@@ -61,6 +63,10 @@ uv run notes-mcp
 ```
 
 By default, each server process creates its own session-scoped data root under `/tmp/notes-<session-id>/`, with note bodies in `notes/` and the vector index in `chroma/`. When the server shuts down, this temp directory is deleted. Set `NOTES_MCP_DATA_DIR=/custom/path` (or pass `data_dir` to `build_server`) to use a persistent location instead.
+
+# Getting the model to reliably take notes
+
+Reference [example.AGENTS.md](./example.AGENTS.md)
 
 # Development notes
 

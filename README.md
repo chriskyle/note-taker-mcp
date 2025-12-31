@@ -53,7 +53,26 @@ Args:
 
 # Running the server
 
-> TODO: Add `uvx note-taker-mcp` support.
+## Codex config.toml
+
+```toml
+[mcp_servers.notes]
+command = "uvx"
+args = ["note-taker-mcp"]
+```
+
+## Cursor / Claude Code
+
+```json
+"notes": {
+  "command": "uvx",
+  "args": [
+    "note-taker-mcp"
+  ]
+}
+```
+
+## Running Locally
 
 Requirements: Python 3.10+, [`uv`](https://github.com/astral-sh/uv), and the `fastmcp`/`chromadb` dependencies installed via `uv sync`.
 

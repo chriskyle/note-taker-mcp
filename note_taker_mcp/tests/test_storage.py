@@ -1,7 +1,8 @@
-import pytest
 from pathlib import Path
 
-from notes_mcp.storage import NoteNotFound, NoteStorage
+import pytest
+
+from note_taker_mcp.storage import NoteNotFound, NoteStorage
 
 
 def test_write_read_update_remove(tmp_path: Path) -> None:

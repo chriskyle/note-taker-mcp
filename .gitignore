@@ -1,3 +1,6 @@
+# IDE
+.vscode/
+
 # Distribution / packaging
 .Python
 build/
@@ -37,3 +40,7 @@ venv/
 AGENTS.md
 PLANS.md
 **/execplans/
+
+# Random
+.DS_Store
+.ruff_cache/

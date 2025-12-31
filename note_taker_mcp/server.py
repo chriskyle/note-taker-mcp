@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-import secrets
 import inspect
 import logging
 import os
+import secrets
 import shutil
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
 
 from .index import NotesIndex
 from .storage import NoteNotFound, NoteStorage
@@ -30,12 +29,14 @@ except ImportError:  # pragma: no cover
 LOG = logging.getLogger("notes_mcp.server")
 
 
-def _resolve_data_root(session_id: str, data_dir: Optional[Path]) -> tuple[Path, Optional[Path]]:
+def _resolve_data_root(
+    session_id: str, data_dir: Path | None
+) -> tuple[Path, Path | None]:
     """Pick a data root for this server instance and note whether it should be cleaned up."""
     env = os.getenv("NOTES_MCP_DATA_DIR")
     if data_dir:
         root = Path(data_dir).expanduser()
-        cleanup_root: Optional[Path] = None
+        cleanup_root: Path | None = None
     elif env:
         root = Path(env).expanduser()
         cleanup_root = None
@@ -54,14 +55,14 @@ def default_data_dir() -> Path:
 
 
 def build_server(
-    data_dir: Optional[Path] = None,
+    data_dir: Path | None = None,
     collection_name: str = "notes",
 ) -> FastMCP:
     """Create and configure the FastMCP server instance."""
     session_id = secrets.token_hex(8)
-    storage: Optional[NoteStorage] = None
-    index: Optional[NotesIndex] = None
-    cleanup_root: Optional[Path] = None
+    storage: NoteStorage | None = None
+    index: NotesIndex | None = None
+    cleanup_root: Path | None = None
 
     def _ensure_ready() -> tuple[NoteStorage, NotesIndex]:
         if storage is None or index is None:
@@ -70,7 +71,9 @@ def build_server(
 
     def _bootstrap_without_lifespan() -> None:
         nonlocal storage, index, cleanup_root
-        data_root, cleanup_root = _resolve_data_root(session_id=session_id, data_dir=data_dir)
+        data_root, cleanup_root = _resolve_data_root(
+            session_id=session_id, data_dir=data_dir
+        )
         notes_dir = data_root / "notes"
         chroma_dir = data_root / "chroma"
         storage = NoteStorage(notes_dir=notes_dir)
@@ -84,7 +87,9 @@ def build_server(
     @asynccontextmanager
     async def lifespan(_: FastMCP):
         nonlocal storage, index, cleanup_root
-        data_root, cleanup_root = _resolve_data_root(session_id=session_id, data_dir=data_dir)
+        data_root, cleanup_root = _resolve_data_root(
+            session_id=session_id, data_dir=data_dir
+        )
         notes_dir = data_root / "notes"
         chroma_dir = data_root / "chroma"
         storage = NoteStorage(notes_dir=notes_dir)
@@ -98,7 +103,11 @@ def build_server(
                     shutil.rmtree(cleanup_root)
                     LOG.info("Cleaned temporary notes data dir %s", cleanup_root)
                 except Exception:
-                    LOG.warning("Failed to clean temporary data dir %s", cleanup_root, exc_info=True)
+                    LOG.warning(
+                        "Failed to clean temporary data dir %s",
+                        cleanup_root,
+                        exc_info=True,
+                    )
 
     try:
         mcp = FastMCP("notes-mcp", lifespan=lifespan)
@@ -107,21 +116,25 @@ def build_server(
         mcp = FastMCP("notes-mcp")
 
     @mcp.tool(description="Create a new note and index its summary for retrieval.")
-    def write_note(note: str, when_to_use: str, tags: Optional[list[str]] = None) -> dict:
+    def write_note(note: str, when_to_use: str, tags: list[str] | None = None) -> dict:
         storage_obj, index_obj = _ensure_ready()
         note_id, path = storage_obj.write_note(note_text=note)
-        index_obj.add_entry(note_id=note_id, when_to_use=when_to_use, path=str(path), tags=tags)
+        index_obj.add_entry(
+            note_id=note_id, when_to_use=when_to_use, path=str(path), tags=tags
+        )
         return {"note_id": note_id}
 
     @mcp.tool(description="Search for notes by query with optional tag filtering.")
     def search_notes(
         query: str,
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
         score_threshold: float = 0.75,
         k: int = 5,
     ) -> dict:
         storage_obj, index_obj = _ensure_ready()
-        hits = index_obj.search(query=query, k=k, tags=tags, score_threshold=score_threshold)
+        hits = index_obj.search(
+            query=query, k=k, tags=tags, score_threshold=score_threshold
+        )
         results = []
         for hit in hits:
             try:
@@ -176,7 +189,7 @@ def _run_server(server: FastMCP) -> None:
         run_callable()
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     argv = list(argv) if argv is not None else sys.argv[1:]
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     server = build_server()

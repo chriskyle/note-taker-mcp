@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Tuple
-import uuid
 
 
 class StorageError(Exception):
@@ -39,7 +39,7 @@ class NoteStorage:
         self.notes_dir = Path(self.notes_dir)
         self.notes_dir.mkdir(parents=True, exist_ok=True)
 
-    def write_note(self, note_text: str) -> Tuple[str, Path]:
+    def write_note(self, note_text: str) -> tuple[str, Path]:
         """Create a new note file, returning (note_id, path)."""
         note_id = str(uuid.uuid4())
         path = self._path_for(note_id)

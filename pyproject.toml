@@ -25,4 +25,9 @@ build-backend = "hatchling.build"
 package = true
 dev-dependencies = [
     "pytest",
+    "ruff>=0.14.10",
 ]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]

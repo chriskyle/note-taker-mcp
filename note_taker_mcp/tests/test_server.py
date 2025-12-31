@@ -1,10 +1,11 @@
-import pytest
 import shutil
 from pathlib import Path
 
+import pytest
+
 fastmcp = pytest.importorskip("fastmcp")
 
-from notes_mcp.server import (  # noqa: E402 - fastmcp must import first
+from note_taker_mcp.server import (  # noqa: E402 - fastmcp must import first
     build_server,
     default_data_dir,
 )
@@ -24,7 +25,9 @@ def test_default_data_dir_uses_tmp(monkeypatch: pytest.MonkeyPatch) -> None:
     shutil.rmtree(data_dir)
 
 
-def test_default_data_dir_respects_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_default_data_dir_respects_env(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     custom = tmp_path / "custom-notes"
     monkeypatch.setenv("NOTES_MCP_DATA_DIR", str(custom))
     data_dir = default_data_dir()

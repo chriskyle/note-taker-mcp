@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Sequence, Set
 
 import chromadb
 from chromadb.api.client import ClientAPI
@@ -23,9 +22,9 @@ class SearchHit:
 
     note_id: str
     score: float  # similarity score (1 - cosine distance)
-    when_to_use: Optional[str]
-    path: Optional[str]
-    tags: Optional[List[str]]
+    when_to_use: str | None
+    path: str | None
+    tags: list[str] | None
 
 
 class NotesIndex:
@@ -35,7 +34,7 @@ class NotesIndex:
         self,
         chroma_path: Path,
         collection_name: str = "notes",
-        embedder: Optional[embedding_functions.EmbeddingFunction] = None,
+        embedder: embedding_functions.EmbeddingFunction | None = None,
     ) -> None:
         self.chroma_path = Path(chroma_path)
         self.chroma_path.mkdir(parents=True, exist_ok=True)
@@ -47,7 +46,13 @@ class NotesIndex:
             embedding_function=self._embedder,
         )
 
-    def add_entry(self, note_id: str, when_to_use: str, path: str, tags: Optional[Sequence[str]] = None) -> None:
+    def add_entry(
+        self,
+        note_id: str,
+        when_to_use: str,
+        path: str,
+        tags: list[str] | None = None,
+    ) -> None:
         """Insert a new entry or overwrite an existing one."""
         # Chroma metadata fields must be scalar (str/int/float/bool/None), so we
         # store tags as a JSON string and decode on read.
@@ -66,7 +71,11 @@ class NotesIndex:
         )
 
     def update_entry(
-        self, note_id: str, when_to_use: str, path: str, tags: Optional[Sequence[str]] = None
+        self,
+        note_id: str,
+        when_to_use: str,
+        path: str,
+        tags: list[str] | None = None,
     ) -> None:
         """Update an existing entry (upsert semantics)."""
         self.add_entry(note_id, when_to_use, path, tags)
@@ -79,14 +88,14 @@ class NotesIndex:
         self,
         query: str,
         k: int = 5,
-        tags: Optional[Sequence[str]] = None,
+        tags: list[str] | None = None,
         score_threshold: float = 0.75,
-    ) -> List[SearchHit]:
+    ) -> list[SearchHit]:
         """Return up to k notes for a query, filtered by tags and similarity threshold."""
         if k <= 0 or score_threshold < 0:
             return []
 
-        tag_set: Set[str] = set(tags or [])
+        tag_set: set[str] = set(tags or [])
 
         query_k = max(k * 3, k)
         results = self.collection.query(
@@ -94,7 +103,7 @@ class NotesIndex:
             n_results=query_k,
             include=["distances", "metadatas", "documents"],
         )
-        hits: List[SearchHit] = []
+        hits: list[SearchHit] = []
         ids = results.get("ids", [[]])[0]
         distances = results.get("distances", [[]])[0]
         documents = results.get("documents", [[]])[0]
@@ -107,7 +116,7 @@ class NotesIndex:
             when_to_use = meta.get("when_to_use") if isinstance(meta, dict) else None
             path = meta.get("path") if isinstance(meta, dict) else None
             raw_tags = meta.get("tags") if isinstance(meta, dict) else None
-            note_tags_list: List[str] = []
+            note_tags_list: list[str] = []
             if isinstance(raw_tags, list):
                 note_tags_list = [str(tag) for tag in raw_tags]
             elif isinstance(raw_tags, str):

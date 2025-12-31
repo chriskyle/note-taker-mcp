@@ -1,3 +1,5 @@
+> An important pre-read caveat. This project is 100% codex written. I wrote nothing execpt the prompts to execute this. I plan to take a pass at cleaning up the code where needed but as of now the code is rough but working.
+
 # Notes MCP
 
 The goal of the notes mcp server is to allow for LLMs to write and read small chunks of information that they think may be important to reference later.

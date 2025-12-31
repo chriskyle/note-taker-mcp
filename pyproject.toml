@@ -14,7 +14,7 @@ dependencies = [
 Repository = "https://github.com/chriskyle/note-taker-mcp"
 
 [project.scripts]
-notes-mcp = "note_taker_mcp.server:main"
+note-taker-mcp = "note_taker_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]

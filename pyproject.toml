@@ -1,7 +1,7 @@
 [project]
 name = "note-taker-mcp"
 version = "0.1.0"
-description = "Stdio MCP server for lightweight note storage with local Chroma retrieval."
+description = "MCP allowing short text notes to be persisted and retrieved locally for aiding in long context reasoning tasks"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "chriskyle" }, { name = "codex" }]
@@ -9,6 +9,9 @@ dependencies = [
     "fastmcp",
     "chromadb",
 ]
+
+[project.urls]
+Repository = "https://github.com/chriskyle/note-taker-mcp"
 
 [project.scripts]
 notes-mcp = "note_taker_mcp.server:main"

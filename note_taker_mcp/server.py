@@ -26,7 +26,7 @@ except ImportError:  # pragma: no cover
         ) from exc
 
 
-LOG = logging.getLogger("notes_mcp.server")
+LOG = logging.getLogger("note-taker-mcp.server")
 
 
 def _resolve_data_root(
@@ -66,7 +66,7 @@ def build_server(
 
     def _ensure_ready() -> tuple[NoteStorage, NotesIndex]:
         if storage is None or index is None:
-            raise RuntimeError("notes-mcp server not initialized yet")
+            raise RuntimeError("note-taker-mcp server not initialized yet")
         return storage, index
 
     def _bootstrap_without_lifespan() -> None:
@@ -94,7 +94,7 @@ def build_server(
         chroma_dir = data_root / "chroma"
         storage = NoteStorage(notes_dir=notes_dir)
         index = NotesIndex(chroma_path=chroma_dir, collection_name=collection_name)
-        LOG.info("notes-mcp session %s using data dir %s", session_id, data_root)
+        LOG.info("note-taker-mcp session %s using data dir %s", session_id, data_root)
         try:
             yield
         finally:
@@ -110,10 +110,10 @@ def build_server(
                     )
 
     try:
-        mcp = FastMCP("notes-mcp", lifespan=lifespan)
+        mcp = FastMCP("note-taker-mcp", lifespan=lifespan)
     except TypeError:
         _bootstrap_without_lifespan()
-        mcp = FastMCP("notes-mcp")
+        mcp = FastMCP("note-taker-mcp")
 
     @mcp.tool(description="Create a new note and index its summary for retrieval.")
     def write_note(note: str, when_to_use: str, tags: list[str] | None = None) -> dict:
@@ -194,9 +194,9 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     server = build_server()
     if argv and argv[0] == "--check":
-        LOG.info("notes-mcp server wiring OK (dry run)")
+        LOG.info("note-taker-mcp server wiring OK (dry run)")
         return 0
-    LOG.info("Starting notes-mcp server over stdio...")
+    LOG.info("Starting note-taker-mcp server over stdio...")
     _run_server(server)
     return 0
 

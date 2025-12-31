@@ -3,7 +3,7 @@
 
 ## Notes MCP = Model Working Notes (anti-context-loss)
 
-When `notes-mcp.write_note`, `notes-mcp.search_notes`, `notes-mcp.update_note`, and `notes-mcp.delete_note` are available, treat them as a model-owned
+When `note-taker-mcp.write_note`, `note-taker-mcp.search_notes`, `note-taker-mcp.update_note`, and `note-taker-mcp.delete_note` are available, treat them as a model-owned
 working notebook to prevent loss of important details due to long context, compaction, or task length.
 
 These notes are NOT user-preferences storage. They are concise, task-relevant working memory.
@@ -17,7 +17,7 @@ Write a note whenever any of the following occurs:
 - You are about to traverse many files, apply multiple edits, or run a long investigation.
 
 ### When to read notes
-- At the start of each user request: `notes-mcp.search_notes` using the main entities/goals.
+- At the start of each user request: `note-taker-mcp.search_notes` using the main entities/goals.
 - During long tasks: re-read notes at natural phase boundaries (after investigation, before edits, before final response).
 - If you feel uncertain about a previously derived detail, read notes rather than re-deriving from memory.
 

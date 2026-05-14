@@ -1,99 +1,84 @@
-> An important pre-read caveat. This project is 100% codex written. I wrote nothing execpt the prompts to execute this. I plan to take a pass at cleaning up the code where needed but as of now the code is rough but working.
+# Note Taker Skill
 
-# Notes MCP
+`note-taker` is a Codex skill for temporary, session-scoped working notes. It is designed for long or multi-step agent tasks where intermediate facts, decisions, files, and TODOs need to survive across turns or compaction without becoming durable cross-run memory.
 
-The goal of the notes mcp server is to allow for LLMs to write and read small chunks of information that they think may be important to reference later.
+The runtime artifact is the skill directory:
 
-# Design
-
-- The notes will be stored as filestore files with a unique uuid for each file.
-- A summary of the note (or details the model provides on when it would want to use that note again) will be persisted to a local vector store along with a metadata field on the entry containing the uuid to reference back to the file.
-- The vector store is a local Chroma instance backed by an on-device embedding function, persisted under `.notes/chroma/`.
-
-The system is designed with four core actions to interact with this system
-
-## Actions
-
-### Write Note
-
-Description: This should create a new note, persist it to disk, and add an entry into the Vector Store.
-
-Args:
-- note: str - the note to persist to disk
-- when_to_use - a summary of the note and when the model would want to use this note
-- tags: list[str] (optional) - metadata tags to aid filtered search
-
-### Search Notes
-
-Description: Returns up to five notes matching the query, optionally filtered by tags and score threshold.
-
-Args:
-- query: str - the search query
-- tags: list[str] (optional) - only return notes that share at least one of these tags
-- score_threshold: float (optional, default 0.75) - minimum similarity score required
-- k: int (optional, default 5) - max results to return
-
-Return:
-- results: list of objects each containing `note`, `note_id`, `score`, `when_to_use`, and `tags`
-
-### Remove Note
-
-Description: Deletes a note from filestore & vectore store
-
-Args:
-- note_id: str - the id of the note to delete
-
-### Update Note
-
-Description: Updates an existing note. Will overwrite the entire note with the new content provided, is not diff based
-
-Args:
-- note_id: str - the id of the note to update
-- note: str - the new note content to overwrite the old note
-
-# Running the server
-
-## Codex config.toml
-
-```toml
-[mcp_servers.notes]
-command = "uvx"
-args = ["note-taker-mcp"]
+```text
+skill/
+  SKILL.md
+  scripts/
+    notes.py
 ```
 
-## Cursor / Claude Code
+There is no MCP server, package installation, vector store, or runtime dependency.
 
-```json
-"notes": {
-  "command": "uvx",
-  "args": [
-    "note-taker-mcp"
-  ]
-}
+## Design
+
+The skill resolves a deterministic temp session from:
+
+1. `NOTE_TAKER_SESSION_ID`, if set.
+2. `CODEX_THREAD_ID`, if set.
+3. Otherwise it fails loudly and asks for `NOTE_TAKER_SESSION_ID`.
+
+The session key is a hash of:
+
+```text
+session identity + workspace root + git branch/ref
 ```
 
-## Running Locally
+By default, session files live under:
 
-Requirements: Python 3.10+, [`uv`](https://github.com/astral-sh/uv), and the `fastmcp`/`chromadb` dependencies installed via `uv sync`.
-
-Quick start:
-
-``` 
-uv sync
-uv run notes-mcp
+```text
+/tmp/note-taker/v1/sessions/<session-key>/
+  MANIFEST.json
+  NOTES.md
+  TODO.md
 ```
 
-By default, each server process creates its own session-scoped data root under `/tmp/notes-<session-id>/`, with note bodies in `notes/` and the vector index in `chroma/`. When the server shuts down, this temp directory is deleted. Set `NOTES_MCP_DATA_DIR=/custom/path` (or pass `data_dir` to `build_server`) to use a persistent location instead.
+This gives the intended lifetime:
 
-# Getting the model to reliably take notes
+- same thread, repo, and branch: same temp notes across turns
+- new thread: new notes
+- new branch/ref: new notes
+- missing session identity: no fuzzy reuse
 
-Reference [example.AGENTS.md](./example.AGENTS.md)
+`MANIFEST.json` is script-owned metadata. The model-facing files are:
 
-# Development notes
+- `NOTES.md`: mutable working understanding, findings, decisions, relevant files, open questions, and corrected assumptions.
+- `TODO.md`: mutable task tracking with current, blocked, and done sections.
 
-- Entry point: `notes_mcp/server.py` (script name: `notes-mcp`).
-- Storage layer: `notes_mcp/storage.py` writes UTF-8 note files keyed by UUID.
-- Vector index: `notes_mcp/index.py` uses Chroma’s persistent client and default local embedding function.
-- Tests: `uv run python -m pytest`.
+## Usage
 
-The server runs over stdio via `uv run notes-mcp` and registers four MCP tools: `write_note`, `search_notes`, `update_note`, and `remove_note`.
+Run the bundled script directly:
+
+```bash
+python skill/scripts/notes.py resume
+```
+
+Useful commands:
+
+```bash
+python skill/scripts/notes.py init
+python skill/scripts/notes.py where
+python skill/scripts/notes.py resume
+python skill/scripts/notes.py search "query"
+python skill/scripts/notes.py gc
+```
+
+Use `NOTE_TAKER_ROOT` or `--root` to override the temp base directory.
+
+## Installing As A Codex Skill
+
+Copy `skill/` into your Codex skills directory as `note-taker`. The skill instructions in `skill/SKILL.md` describe when and how the agent should use the bundled script.
+
+## Development
+
+This repo keeps `pyproject.toml` only for development tooling. It is not a Python package and is not intended for PyPI distribution.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install pytest ruff
+.venv/bin/python -m pytest
+.venv/bin/python -m ruff check .
+```
